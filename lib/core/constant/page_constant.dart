@@ -1,4 +1,4 @@
-import '../../../features/auth/introduction/model/page_model.dart';
+import '../../features/auth/introduction/model/page_model.dart';
 
 class IntroPage {
   static Page firstPage = Page(

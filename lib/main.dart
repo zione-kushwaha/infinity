@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:i/auth/authentication/view/login_view.dart';
-import 'package:i/auth/introduction/view/introduction_screen.dart';
+import 'package:i/features/auth/authentication/view/forget_password.dart';
+import 'package:i/features/auth/authentication/view/login_view.dart';
+import 'package:i/features/auth/authentication/view/user_name.dart';
+import 'package:i/features/auth/introduction/view/introduction_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'features/auth/authentication/view/sigup_view.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -32,6 +35,24 @@ class MyApp extends StatelessWidget {
           switch (settings.name) {
             case '/':
               return createRoute(IntroductionScreens());
+
+            case '/login':
+              return createRoute(LoginView());
+
+            case '/username':
+              return createRoute(
+                  UsernamePage(email: settings.arguments as String));
+            case '/signup':
+              return createRoute(SignupView());
+
+            case '/forgot-password':
+              return createRoute(ForgetPasswordView());
+            default:
+              return createRoute(Scaffold(
+                body: Center(
+                  child: Text('No route defined for ${settings.name}'),
+                ),
+              ));
           }
         });
   }

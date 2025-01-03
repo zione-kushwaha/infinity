@@ -21,13 +21,11 @@ class UserDataService {
   });
 
   addUserDataToFirestore({
-    required String displayName,
     required String username,
     required String email,
     required String profilePic,
   }) async {
     UserModel user = UserModel(
-      displayName: displayName,
       username: username,
       email: email,
       profilePic: profilePic,

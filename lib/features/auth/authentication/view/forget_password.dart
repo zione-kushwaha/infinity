@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:i/core/constant/color_constant.dart';
+import 'package:i/features/auth/authentication/repository/auth_service.dart';
+import 'package:i/features/auth/widgets/header_infinity.dart';
 
 class ForgetPasswordView extends ConsumerStatefulWidget {
   const ForgetPasswordView({super.key});
@@ -11,6 +14,7 @@ class ForgetPasswordView extends ConsumerStatefulWidget {
 class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
   late final GlobalKey<FormState> _formKey;
   late final TextEditingController _emailController;
+  bool _isloading = false;
 
   @override
   void initState() {
@@ -33,39 +37,21 @@ class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
         reverse: true,
         physics: const BouncingScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24.0,
+            vertical: 2,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 20,
             children: [
-              _buildLogo(),
-              const SizedBox(height: 40),
+              headerLogo(),
               _forgetPasswordForm(AutovalidateMode.onUserInteraction, context),
-              const SizedBox(height: 20),
               _buildBackToLoginText(context),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLogo() {
-    return Column(
-      children: [
-        Image.asset(
-          'assets/icon/icon.png',
-          height: 100,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Loop of Knowledge',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-      ],
     );
   }
 
@@ -87,7 +73,7 @@ class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
               return null;
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           _resetPasswordButton(context),
         ],
       ),
@@ -105,7 +91,7 @@ class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        prefixIcon: Icon(icon, color: ColorConstant().second),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -126,26 +112,49 @@ class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepOrangeAccent,
+          backgroundColor: ColorConstant().first,
           padding: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(40),
           ),
         ),
-        onPressed: () {
+        onPressed: () async {
           FocusManager.instance.primaryFocus?.unfocus();
           if (_formKey.currentState!.validate()) {
             // Handle reset password logic here
+            if (_emailController.text.isNotEmpty &&
+                _emailController.text.contains('@')) {
+              setState(() {
+                _isloading = true;
+              });
+              await ref
+                  .read(authServiceProvider)
+                  .resetPassword(_emailController.text.trim());
+              setState(() {
+                _isloading = false;
+              });
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Reset password link sent to your email'),
+                ),
+              );
+            }
           }
         },
-        child: const Text(
-          'Reset Password',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        child: _isloading
+            ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : const Text(
+                'Reset Password',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
@@ -158,7 +167,7 @@ class _ForgetPasswordViewState extends ConsumerState<ForgetPasswordView> {
       child: Text(
         'Back to Login',
         style: TextStyle(
-          color: Colors.deepPurple,
+          color: ColorConstant().second,
           decoration: TextDecoration.underline,
         ),
       ),

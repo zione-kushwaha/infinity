@@ -1,22 +1,23 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:i/auth/authentication/repository/auth_service.dart';
+import 'package:i/core/constant/color_constant.dart';
+import 'package:i/features/auth/authentication/repository/auth_service.dart';
+import 'package:i/features/auth/widgets/header_infinity.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
-import 'sigup_view.dart';
-
-class LoginView extends ConsumerStatefulWidget {
-  const LoginView({super.key});
+class SignupView extends ConsumerStatefulWidget {
+  const SignupView({super.key});
 
   @override
-  ConsumerState<LoginView> createState() => _SignupViewState();
+  ConsumerState<SignupView> createState() => _SignupViewState();
 }
 
-class _SignupViewState extends ConsumerState<LoginView> {
+class _SignupViewState extends ConsumerState<SignupView> {
   late final GlobalKey<FormState> _formKey;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
   bool _isloading = false;
 
   @override
@@ -25,6 +26,7 @@ class _SignupViewState extends ConsumerState<LoginView> {
     _formKey = GlobalKey<FormState>();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
   }
 
   @override
@@ -32,6 +34,7 @@ class _SignupViewState extends ConsumerState<LoginView> {
     super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
   }
 
   @override
@@ -42,13 +45,12 @@ class _SignupViewState extends ConsumerState<LoginView> {
         reverse: true,
         physics: const BouncingScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 2),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 20,
             children: [
-              _buildLogo(),
-              const SizedBox(height: 20),
+              headerLogo(),
               _signupForm(AutovalidateMode.onUserInteraction, context),
               _buildOR(context),
               _buildSignInWithGoogle(context),
@@ -57,26 +59,6 @@ class _SignupViewState extends ConsumerState<LoginView> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLogo() {
-    return Column(
-      children: [
-        Image.asset(
-          'assets/icon/icon.png',
-          height: 100,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Loop of Knowledge',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepOrangeAccent,
-          ),
-        ),
-      ],
     );
   }
 
@@ -113,6 +95,21 @@ class _SignupViewState extends ConsumerState<LoginView> {
               } else if (!value.contains(RegExp(r'[A-Z]'))) {
                 return 'Must contain one uppercase letter';
               }
+            },
+          ),
+          const SizedBox(height: 20),
+          _buildTextFormField(
+            controller: _confirmPasswordController,
+            labelText: 'Confirm Password',
+            icon: Icons.lock,
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please confirm your password';
+              }
+              if (value != _passwordController.text) {
+                return 'Passwords do not match';
+              }
               return null;
             },
           ),
@@ -134,13 +131,13 @@ class _SignupViewState extends ConsumerState<LoginView> {
       controller: controller,
       decoration: InputDecoration(
         labelText: labelText,
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        prefixIcon: Icon(icon, color: ColorConstant().second),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.deepPurple),
+          borderSide: BorderSide(color: ColorConstant().second),
         ),
         filled: true,
         fillColor: Colors.grey[200],
@@ -155,7 +152,7 @@ class _SignupViewState extends ConsumerState<LoginView> {
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepOrangeAccent,
+          backgroundColor: ColorConstant().first,
           padding: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(40),
@@ -171,21 +168,22 @@ class _SignupViewState extends ConsumerState<LoginView> {
                   });
                   final result = await ref
                       .read(authServiceProvider)
-                      .signInWithEmailAndPassword(
+                      .createAccountWithEmailAndPassword(
                         _emailController.text,
                         _passwordController.text,
                       );
 
                   if (result) {
+                    Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('login successful'),
+                        content: Text('please verify your email'),
                       ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Failed to login'),
+                        content: Text('Failed to create account'),
                       ),
                     );
                   }
@@ -194,12 +192,12 @@ class _SignupViewState extends ConsumerState<LoginView> {
                   });
                 }
               },
-        child: 2 > 3
+        child: _isloading
             ? const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               )
             : const Text(
-                'Login',
+                'Sign Up',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -261,19 +259,17 @@ class _SignupViewState extends ConsumerState<LoginView> {
   Widget _buildLoginText(BuildContext context) {
     return RichText(
         text: TextSpan(
-      text: 'Don\'t have an account?  ',
+      text: 'Already have an account?  ',
       style: TextStyle(color: Colors.black, fontSize: 16),
       children: [
         TextSpan(
-          text: 'Sign Up',
+          text: 'Login',
           recognizer: TapGestureRecognizer()
             ..onTap = () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const SignupView();
-              }));
+              Navigator.pop(context);
             },
           style: TextStyle(
-            color: Colors.deepOrange,
+            color: ColorConstant().second,
             fontWeight: FontWeight.bold,
             decoration: TextDecoration.underline,
           ),
